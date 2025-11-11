@@ -20,20 +20,21 @@ fi
 
 echo "${NEXT_STATE}" > "${STATUS_FILE}"
 
-for PAGE in index about contact; do
-  cp "${ROOT_DIR}/templates/${NEXT_STATE}/${PAGE}.html" "${ROOT_DIR}/${PAGE}.html"
-done
+if [ "${NEXT_STATE}" = "online" ]; then
+  for PAGE in index about contact; do
+    cp "${ROOT_DIR}/templates/${NEXT_STATE}/${PAGE}.html" "${ROOT_DIR}/${PAGE}.html"
+  done
 
-DEFAULT_BASE_URL="https://example.github.io/beacon-tests"
-if [ -n "${GITHUB_REPOSITORY}" ]; then
-  OWNER="${GITHUB_REPOSITORY%%/*}"
-  REPO="${GITHUB_REPOSITORY##*/}"
-  BASE_URL="https://${OWNER}.github.io/${REPO}"
-else
-  BASE_URL="${DEFAULT_BASE_URL}"
-fi
+DEFAULT_BASE_URL="https://example.github.io/plain-rotation"
+  if [ -n "${GITHUB_REPOSITORY}" ]; then
+    OWNER="${GITHUB_REPOSITORY%%/*}"
+    REPO="${GITHUB_REPOSITORY##*/}"
+    BASE_URL="https://${OWNER}.github.io/${REPO}"
+  else
+    BASE_URL="${DEFAULT_BASE_URL}"
+  fi
 
-cat > "${ROOT_DIR}/sitemap.xml" <<EOF
+  cat > "${ROOT_DIR}/sitemap.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
@@ -50,6 +51,15 @@ cat > "${ROOT_DIR}/sitemap.xml" <<EOF
   </url>
 </urlset>
 EOF
+
+  rm -f "${STATUS_DIR}/offline.flag"
+else
+  for PAGE in index about contact; do
+    rm -f "${ROOT_DIR}/${PAGE}.html"
+  done
+  rm -f "${ROOT_DIR}/sitemap.xml"
+  touch "${STATUS_DIR}/offline.flag"
+fi
 
 if [ -n "${GITHUB_ENV}" ]; then
   echo "next_state=${NEXT_STATE}" >> "${GITHUB_ENV}"
